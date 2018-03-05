@@ -47,7 +47,7 @@ public:
 
 	// Constructor
 	// @param num_particles Number of particles
-	ParticleFilter(unsigned int N);
+	ParticleFilter();
 
 	// Destructor
 	~ParticleFilter() {}
@@ -103,7 +103,7 @@ public:
 	 * Set a particles list of associations, along with the associations calculated world x,y coordinates
 	 * This can be a very useful debugging tool to make sure transformations are correct and assocations correctly connected
      */
-	void SetAssociations(Particle& particle, const std::vector<int>& associations,
+	Particle SetAssociations(Particle& particle, const std::vector<int>& associations,
                              const std::vector<double>& sense_x, const std::vector<double>& sense_y);
 	
 	std::string getAssociations(Particle best);

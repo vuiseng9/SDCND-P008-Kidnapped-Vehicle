@@ -27,17 +27,6 @@ std::string hasData(std::string s) {
 
 int main(int argc, char** argv)
 {
-  int n_particle = 5;
-  if (argc > 1) {
-    if (2 == argc) {
-        n_particle = stoi(argv[1]);
-    } else {
-        cout << "[Error] only support a single integer as no. of particles to instantiate." << endl;
-        exit;
-    }
-  }
-  for (int i = 0; i < argc; ++i)
-              cout << argv[i] << "\n";
   uWS::Hub h;
 
   //Set up parameters here
@@ -55,7 +44,7 @@ int main(int argc, char** argv)
   }
 
   // Create particle filter
-  ParticleFilter pf(n_particle);
+  ParticleFilter pf;
 
   h.onMessage([&pf,&map,&delta_t,&sensor_range,&sigma_pos,&sigma_landmark](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
