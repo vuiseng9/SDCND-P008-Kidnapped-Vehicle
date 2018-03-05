@@ -21,6 +21,7 @@ struct Particle {
 	std::vector<int> associations;
 	std::vector<double> sense_x;
 	std::vector<double> sense_y;
+
 };
 
 
@@ -30,14 +31,15 @@ class ParticleFilter {
 	// Number of particles to draw
 	int num_particles; 
 	
-	
-	
 	// Flag, if filter is initialized
 	bool is_initialized;
 	
 	// Vector of weights of all particles
 	std::vector<double> weights;
-	
+
+    // random generator
+    std::default_random_engine gen;
+
 public:
 	
 	// Set of current particles
@@ -45,7 +47,7 @@ public:
 
 	// Constructor
 	// @param num_particles Number of particles
-	ParticleFilter() : num_particles(0), is_initialized(false) {}
+	ParticleFilter(unsigned int N);
 
 	// Destructor
 	~ParticleFilter() {}
@@ -70,7 +72,7 @@ public:
 	 * @param velocity Velocity of car from t to t+1 [m/s]
 	 * @param yaw_rate Yaw rate of car from t to t+1 [rad/s]
 	 */
-	void prediction(double delta_t, double std_pos[], double velocity, double yaw_rate);
+	void prediction(double dt, double std_pos[], double v, double yaw_rate);
 	
 	/**
 	 * dataAssociation Finds which observations correspond to which landmarks (likely by using
@@ -100,10 +102,9 @@ public:
 	/*
 	 * Set a particles list of associations, along with the associations calculated world x,y coordinates
 	 * This can be a very useful debugging tool to make sure transformations are correct and assocations correctly connected
-	 */
 	Particle SetAssociations(Particle& particle, const std::vector<int>& associations,
 		                     const std::vector<double>& sense_x, const std::vector<double>& sense_y);
-
+    */
 	
 	std::string getAssociations(Particle best);
 	std::string getSenseX(Particle best);
@@ -115,8 +116,16 @@ public:
 	const bool initialized() const {
 		return is_initialized;
 	}
+
+    /**
+     * utility function to print out all particles
+     */
+    void print_particles(std::string identifier);
+
+    /**
+     * utility to calculate euclidean distance
+     */
+    double calc_dist(double x1, double y1, double x2, double y2);
 };
-
-
 
 #endif /* PARTICLE_FILTER_H_ */

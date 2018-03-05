@@ -25,8 +25,19 @@ std::string hasData(std::string s) {
   return "";
 }
 
-int main()
+int main(int argc, char** argv)
 {
+  int n_particle = 5;
+  if (argc > 1) {
+    if (2 == argc) {
+        n_particle = stoi(argv[1]);
+    } else {
+        cout << "[Error] only support a single integer as no. of particles to instantiate." << endl;
+        exit;
+    }
+  }
+  for (int i = 0; i < argc; ++i)
+              cout << argv[i] << "\n";
   uWS::Hub h;
 
   //Set up parameters here
@@ -44,7 +55,7 @@ int main()
   }
 
   // Create particle filter
-  ParticleFilter pf;
+  ParticleFilter pf(n_particle);
 
   h.onMessage([&pf,&map,&delta_t,&sensor_range,&sigma_pos,&sigma_landmark](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -64,15 +75,17 @@ int main()
         if (event == "telemetry") {
           // j[1] is the data JSON object
 
+          // Sense noisy position data from the simulator
+		  double sense_x = std::stod(j[1]["sense_x"].get<std::string>());
+		  double sense_y = std::stod(j[1]["sense_y"].get<std::string>());
+		  double sense_theta = std::stod(j[1]["sense_theta"].get<std::string>());
+
+          cout << "\n[Info] Current GPS noisy position data:\n" <<
+             "x: " << sense_x << ", y: " << sense_y << ", theta: " << sense_theta << endl;
 
           if (!pf.initialized()) {
-
-          	// Sense noisy position data from the simulator
-			double sense_x = std::stod(j[1]["sense_x"].get<std::string>());
-			double sense_y = std::stod(j[1]["sense_y"].get<std::string>());
-			double sense_theta = std::stod(j[1]["sense_theta"].get<std::string>());
-
 			pf.init(sense_x, sense_y, sense_theta, sigma_pos);
+            pf.print_particles("Initialize Particles");
 		  }
 		  else {
 			// Predict the vehicle's next state from previous (noiseless control) data.
@@ -80,6 +93,7 @@ int main()
 			double previous_yawrate = std::stod(j[1]["previous_yawrate"].get<std::string>());
 
 			pf.prediction(delta_t, sigma_pos, previous_velocity, previous_yawrate);
+            pf.print_particles("Predict Particles");
 		  }
 
 		  // receive noisy observation data from the simulator
@@ -112,11 +126,15 @@ int main()
 
 		  // Update the weights and resample
 		  pf.updateWeights(sensor_range, sigma_landmark, noisy_observations, map);
+          pf.print_particles("Weigh Particles");
+
 		  pf.resample();
+          pf.print_particles("Resample Particles");
 
 		  // Calculate and output the average weighted error of the particle filter over all time steps so far.
 		  vector<Particle> particles = pf.particles;
 		  int num_particles = particles.size();
+          int best_particle_index;
 		  double highest_weight = -1.0;
 		  Particle best_particle;
 		  double weight_sum = 0.0;
@@ -124,11 +142,14 @@ int main()
 			if (particles[i].weight > highest_weight) {
 				highest_weight = particles[i].weight;
 				best_particle = particles[i];
+                best_particle_index = i;
 			}
 			weight_sum += particles[i].weight;
 		  }
-		  cout << "highest w " << highest_weight << endl;
-		  cout << "average w " << weight_sum/num_particles << endl;
+          cout << "[Info] best particles: P"    << best_particle_index << endl;
+          cout << "[Info] id: "                 << best_particle.id << endl;
+		  cout << "[Info] highest w "           << highest_weight << endl;
+		  cout << "[Info] average w "           << weight_sum/num_particles << endl;
 
           json msgJson;
           msgJson["best_particle_x"] = best_particle.x;
@@ -189,90 +210,4 @@ int main()
   }
   h.run();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
