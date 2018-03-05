@@ -136,6 +136,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // declare temp variables
     double px, py, p_theta, nearest_dist, dist, sig_x, sig_y, norm, exponent, weight_norm;
     LandmarkObs lm, obs, xobs;
+	vector<int> associations;
+	vector<double> associations_x, associations_y;
 
     // lists to store (1) landmarks in the sensor range and (2) transformed observations in map reference
     vector<LandmarkObs> lm_inrange, x_obs;
@@ -158,7 +160,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         // reset list
         lm_inrange.clear();
         x_obs.clear();
-
+        
         // filter landmarks that are within range of particle sensor
         for (int j=0; j<map_landmarks.landmark_list.size(); j++) {
             lm.id = map_landmarks.landmark_list[j].id_i;
@@ -195,6 +197,19 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         // associate x_obs to the nearest lm_inrange
         dataAssociation(lm_inrange, x_obs);
 
+        // preparing lists for SetAssociations
+		associations.clear();
+		associations_x.clear();
+		associations_y.clear();
+        for (int k=0; k<x_obs.size(); k++) {
+        	associations.push_back(x_obs[k].id);    
+        	associations_x.push_back(x_obs[k].x);    
+        	associations_y.push_back(x_obs[k].y);    
+        }
+
+        // set associated landmark to particle
+        SetAssociations(particles[i], associations, associations_x, associations_y);
+
         // reset particle weight
         particles[i].weight = 1.0;
 
@@ -228,7 +243,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                      << ", current acc. weight: " << particles[i].weight << endl;
 
             } else {
-                
+                cout << "[Error]: program logical bug!" << endl;
+                exit;    
             }
 
 
@@ -272,20 +288,23 @@ void ParticleFilter::resample() {
 
     particles = resampled_particles;
 }
-/*
-Particle ParticleFilter::SetAssociations(Particle& particle, const std::vector<int>& associations, 
+
+void ParticleFilter::SetAssociations(Particle& particle, const std::vector<int>& associations, 
                                      const std::vector<double>& sense_x, const std::vector<double>& sense_y)
 {
     //particle: the particle to assign each listed association, and association's (x,y) world coordinates mapping to
     // associations: The landmark id that goes along with each listed association
     // sense_x: the associations x mapping already converted to world coordinates
     // sense_y: the associations y mapping already converted to world coordinates
+    particle.associations.clear();
+    particle.sense_x.clear();
+    particle.sense_y.clear();
 
     particle.associations= associations;
     particle.sense_x = sense_x;
     particle.sense_y = sense_y;
 }
-*/
+
 string ParticleFilter::getAssociations(Particle best)
 {
 	vector<int> v = best.associations;
